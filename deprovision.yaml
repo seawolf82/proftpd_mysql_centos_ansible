@@ -1,0 +1,7 @@
+- name: Terminate running proftpd, mysql and remove all files
+  hosts: ftp-servers
+  remote_user: root
+  roles:
+    - proftpd_uninstall
+    - mariadb_uninstall
+

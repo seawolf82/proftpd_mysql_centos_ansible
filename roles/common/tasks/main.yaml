@@ -1,0 +1,90 @@
+---
+
+
+- name: upgrade all packages 
+  yum:
+    name: "*"
+    state: latest
+  tags: upgrade
+
+- name: ensure a list of packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - wget
+    - curl
+    - bash-completion
+    - vim
+    - zip
+    - bzip2
+    - gzip
+    - net-tools
+  tags: package
+
+- name: Install epel package
+  package:
+    name: epel-release
+    state: present
+  tags: package
+
+- name: Install htop
+  package: 
+    name: htop
+    state: present
+  tags: package
+
+
+- name: adding firewall rules for ntp service
+  command: firewall-cmd --add-service=ntp --permanent
+  notify: Reloading firewalld rules
+  tags: ntp
+
+- name: Ensure NTP-related packages is installed
+  package: 
+    name: ntp
+    state: present
+  tags: ntp
+
+- name: Ensure tzdata package is installed (Linux).
+  package:
+    name: tzdata
+    state: present
+  tags: package
+
+
+- name: Ensure rsyslog package is installed
+  package:
+    name: rsyslog
+    state: present
+  tags: package
+
+
+- name: Ensure rsyslog is running and enabled as configured
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes
+  tags: package
+
+
+- name: Generate ntp.conf file
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  when: ntp_manage_config 
+  tags: ntp
+  
+- name: Restart ntp daemon
+  systemd:
+    name: ntpd
+    state: restarted 
+  tags: ntp
+
+- name: Ensure ntp is running and enabled as configured
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+  tags: ntp
+

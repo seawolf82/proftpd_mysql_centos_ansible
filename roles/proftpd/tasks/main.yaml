@@ -1,0 +1,61 @@
+---
+
+- name: ensure a list of packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - proftpd
+    - openssl
+    - proftpd-utils
+    - proftpd-mysql
+    - libsemanage-python
+  tags: proftpd
+
+
+- name: Ensure proftpd is running and enabled as configured
+  systemd:
+    name: proftpd
+    state: started
+    enabled: yes
+  tags: proftpd
+
+- name: adding firewalld rules for Proftpd
+  firewalld:
+    service: ftp
+    permanent: true
+    immediate: true
+    state: enabled
+  tags: proftpd
+
+
+- name: Set allow_ftpd_full_access flag on and keep it persistent across reboots
+  seboolean:
+    name: allow_ftpd_full_access
+    state: yes
+    persistent: yes
+  tags: proftpd
+
+
+- name: Backup proftpd.conf
+  command: "mv /etc/proftpd.conf /etc/proftpd.conf.bak"
+  tags: proftpd
+
+
+- name: Add proftpd.conf.mysql
+  template: 
+     src: proftpd.conf.mysql.j2 
+     dest: /etc/proftpd.conf 
+     owner: root 
+     group: root 
+     mode: 0640
+  tags: proftpd
+
+
+- name:  Restart proftpd
+  systemd:
+    name: proftpd
+    state: restarted
+  tags: proftpd
+
+

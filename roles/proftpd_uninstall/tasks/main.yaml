@@ -1,0 +1,55 @@
+---
+
+- name: Stopping proftpd and disabled service
+  systemd:
+    name: proftpd
+    state: stopped
+    enabled: no
+  tags: proftpd
+
+
+- name: Remove firewalld rules for Proftpd
+  firewalld:
+    service: ftp
+    permanent: true
+    immediate: true
+    state: disabled
+  tags: proftpd
+
+
+- name: Remove allow_ftpd_full_access flag on and keep it persistent across reboots
+  seboolean:
+    name: allow_ftpd_full_access
+    state: no
+    persistent: no
+  tags: proftpd
+
+
+
+- name: Remove proftpd packages
+  yum:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+    - proftpd
+    - openssl
+    - proftpd-utils
+    - proftpd-mysql
+  tags: proftpd
+
+
+- name: Remove proftpd.conf.bak
+  file:
+    state: absent
+    path: /etc/proftpd.conf.bak
+  tags: proftpd
+
+
+- name: Remove proftpd.conf
+  file:
+    state: absent
+    path: /etc/proftpd.conf
+  tags: proftpd
+
+

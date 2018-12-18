@@ -1,0 +1,21 @@
+---
+
+ntp_enabled: true
+ntp_manage_config: true
+
+ntp_restric:
+- "127.0.0.1"
+- "::1"
+
+
+# NTP area server configuration 
+
+ntp_area: 'it'
+
+ntp_servers: 
+ - "0.{{ ntp_area }}.pool.ntp.org iburst"
+ - "1.{{ ntp_area }}.pool.ntp.org iburst"
+ - "2.{{ ntp_area }}.pool.ntp.org iburst"
+ - "3.{{ ntp_area }}.pool.ntp.org iburst"
+
+

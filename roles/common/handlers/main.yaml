@@ -1,0 +1,10 @@
+---
+
+- name: Reloading firewalld rules
+  command: firewall-cmd --reload
+
+- name: restart ntp
+  service:
+    name:
+    state: restarted
+  when: ntp_enabled

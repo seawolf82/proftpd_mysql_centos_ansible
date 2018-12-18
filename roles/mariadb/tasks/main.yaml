@@ -1,0 +1,196 @@
+---
+
+
+- name: Install a list of MariaDB packages 
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - mariadb-server
+    - mariadb
+    - python2-PyMySQL
+    - python34-PyMySQL
+    - MySQL-python
+  tags: mariadb
+
+
+- name: Make sure MariaDb service is running and enabled
+  systemd:
+    state: started
+    name: mariadb
+    enabled: yes
+  tags: mariadb
+
+
+- name: adding firewalld rules for MariaDB
+  firewalld:
+    service: mysql
+    permanent: true
+    immediate: true
+    state: enabled
+  tags: mariadb
+
+
+- name: Set mysql_connect_any flag on and keep it persistent across reboots
+  seboolean:
+    name: mysql_connect_any
+    state: yes
+    persistent: yes
+  tags: mariadb
+
+
+- name: Add my.cnf
+  template: src=my.cnf.j2 dest=/etc/my.cnf owner=root group=root mode=0600
+  tags: mariadb
+
+- name: Restart MariaDb
+  systemd: 
+    state: restarted
+    name: mariadb
+  tags: mariadb
+
+
+- name: Set root Password
+  mysql_user: login_password={{ mysql_root_password }} check_implicit_admin=yes name=root host={{ item }} password={{ mysql_root_password }} state=present 
+  with_items:
+    - localhost
+    - 127.0.0.1
+    - ::1
+  tags: mariadb
+
+- name: Reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False
+  tags: mariadb
+
+- name: Remove anonymous users
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User=''
+  changed_when: False
+  tags: mariadb
+
+- name: Disallow root login remotely
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+  changed_when: False
+  tags: mariadb
+
+- name: Remove test database and access to it
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DROP DATABASE IF EXISTS test
+    - DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%'
+  changed_when: False
+  tags: mariadb
+
+- name: Reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False
+  tags: mariadb
+
+
+- name: Create a new database with name 'proftpd'
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DROP DATABASE IF EXISTS proftpd;  
+    - CREATE DATABASE proftpd;
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+- name: Create proftpd user
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DROP USER 'proftpd'@'localhost';
+    - CREATE USER 'proftpd'@'localhost' IDENTIFIED BY '"{{ proftpd_password }}"';
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+
+- name: To allow access to MySQL server from any other computer on the network
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - GRANT ALL PRIVILEGES ON proftpd.* TO 'proftpd'@'%' IDENTIFIED BY '"{{ proftpd_password }}"' WITH GRANT OPTION;
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+
+- name: Use proftpd database
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - USE proftpd;
+  changed_when: False
+  tags: mariadb
+
+
+- name: To create users table
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - CREATE TABLE proftpd.users (
+      userid varchar(30) NOT NULL,
+      passwd varchar(80) NOT NULL,
+      uid int(11) DEFAULT NULL,
+      gid int(11) DEFAULT NULL,
+      homedir varchar(255) DEFAULT NULL,
+      shell varchar(255) DEFAULT NULL,
+      last_accessed DATETIME,
+      PRIMARY KEY (`userid`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC;
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+
+
+- name: To create ftplog table 
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - CREATE TABLE proftpd.`ftplog` (
+      logid bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Record ID',
+      loguser varchar(50) NOT NULL COMMENT 'Username',
+      logdate datetime NOT NULL COMMENT 'Date of up- or download',
+      logcmd char(10) NOT NULL COMMENT 'FTP command',
+      logfile varchar(255) NOT NULL COMMENT 'Up- or downloaded file',
+      logstatus_ftp smallint(5) unsigned NOT NULL COMMENT 'FTP Status',
+      PRIMARY KEY (`logid`),
+      KEY `user_date` (`loguser`,`logdate`,`logcmd`,`logfile`),
+      KEY `date_cmd` (`logdate`,`logcmd`,`loguser`),
+      KEY `status_cmd` (`logstatus_ftp`,`logcmd`,`logdate`,`loguser`),
+      KEY `user_proc_cmd` (`loguser`,`logcmd`)
+      ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC;      
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+
+
+- name: To create login_history table 
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - CREATE TABLE proftpd.login_history (
+      userid VARCHAR(30) NOT NULL,
+      client_ip VARCHAR(20) NOT NULL,
+      server_ip VARCHAR(20) NOT NULL,
+      protocol VARCHAR(10) NOT NULL,
+      last_accessed DATETIME
+      );
+  changed_when: False
+  ignore_errors: yes
+  tags: mariadb
+
+
+- name: Reload privileged 
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES;
+  changed_when: False
+  tags: mariadb
+
