@@ -5,6 +5,7 @@
   yum:
     name: "*"
     state: latest
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
   tags: upgrade
 
 - name: ensure a list of packages installed
@@ -20,6 +21,31 @@
     - bzip2
     - gzip
     - net-tools
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: package
+
+
+- name: upgrade all packages 
+  dnf:
+    name: "*"
+    state: latest
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: upgrade
+
+- name: ensure a list of packages installed
+  dnf:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - wget
+    - curl
+    - bash-completion
+    - vim
+    - zip
+    - bzip2
+    - gzip
+    - net-tools
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
   tags: package
 
 - name: Install epel package
@@ -38,13 +64,13 @@
 - name: adding firewall rules for ntp service
   command: firewall-cmd --add-service=ntp --permanent
   notify: Reloading firewalld rules
-  tags: ntp
+  tags: chrony
 
 - name: Ensure NTP-related packages is installed
   package: 
-    name: ntp
+    name: chrony
     state: present
-  tags: ntp
+  tags: chrony
 
 - name: Ensure tzdata package is installed (Linux).
   package:
@@ -68,23 +94,23 @@
   tags: package
 
 
-- name: Generate ntp.conf file
-  template:
-    src: ntp.conf.j2
-    dest: /etc/ntp.conf
-  when: ntp_manage_config 
-  tags: ntp
+- name: Copy chrony conf file into /etc
+  copy:
+    src: chrony.conf
+    dest: /etc/chrony.conf 
+  tags: chrony
+
   
-- name: Restart ntp daemon
+- name: Restart chronyd daemon
   systemd:
-    name: ntpd
+    name: chronyd
     state: restarted 
-  tags: ntp
+  tags: chrony
 
 - name: Ensure ntp is running and enabled as configured
   service:
-    name: ntpd
+    name: chronyd
     state: started
     enabled: yes
-  tags: ntp
+  tags: chrony
 

@@ -36,8 +36,24 @@
     - openssl
     - proftpd-utils
     - proftpd-mysql
+    - libsemanage-python
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7"
   tags: proftpd
 
+
+- name: Remove proftpd packages
+  dnf:
+    name: "{{ packages }}"
+    state: absent
+  vars:
+    packages:
+    - proftpd
+    - openssl
+    - proftpd-utils
+    - proftpd-mysql
+      - python3-libsemanage
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: proftpd
 
 - name: Remove proftpd.conf.bak
   file:

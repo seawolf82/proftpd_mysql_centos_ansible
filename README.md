@@ -1,14 +1,26 @@
 # proftpd_mysql_centos_ansible
 
 
-This script install on centos7 proftpd with mariadb and manage virtual users
+Tested on:
+
+    Almalinux 8
+    Almalinux 9
+    RockyLinux 8
+    RockyLinux 9
+    Centos 7
+
+Tested on:
+
+    2.9 Ansible version
 
 
-To install proftpd with mariadb on centos7 run:
+This script install proftpd with mariadb and manage virtual users
+
+To install proftpd with mariadb run:
 
 ansible-playbook -i hosts site.yaml
 
-To uninstall proftpd with mariadb on centos7 run:
+To uninstall proftpd with mariadb run:
 
 ansible-playbook -i hosts deprovision.yaml
 

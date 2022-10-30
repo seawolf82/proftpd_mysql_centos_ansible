@@ -10,6 +10,20 @@
     - proftpd-utils
     - proftpd-mysql
     - libsemanage-python
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: proftpd
+
+- name: ensure a list of packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - proftpd
+    - openssl
+    - proftpd-utils
+    - proftpd-mysql
+    - python3-libsemanage
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
   tags: proftpd
 
 

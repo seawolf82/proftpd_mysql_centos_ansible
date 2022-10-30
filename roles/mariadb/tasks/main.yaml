@@ -11,7 +11,21 @@
     - python2-PyMySQL
     - python34-PyMySQL
     - MySQL-python
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
   tags: mariadb
+
+- name: Install a list of MariaDB packages 
+  dnf:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - mariadb-server
+    - mariadb
+    - python2-PyMySQL
+    - python3-PyMySQL
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9") 
+  tags: mariadb
+
 
 
 - name: Make sure MariaDb service is running and enabled
