@@ -66,7 +66,7 @@
   notify: Reloading firewalld rules
   tags: chrony
 
-- name: Ensure NTP-related packages is installed
+- name: Ensure chrony packages is installed
   package: 
     name: chrony
     state: present
@@ -107,7 +107,7 @@
     state: restarted 
   tags: chrony
 
-- name: Ensure ntp is running and enabled as configured
+- name: Ensure chronyd is running and enabled as configured
   service:
     name: chronyd
     state: started

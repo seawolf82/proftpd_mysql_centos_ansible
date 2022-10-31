@@ -3,15 +3,15 @@
 
 Tested on:
 
-    Almalinux 8
-    Almalinux 9
-    RockyLinux 8
-    RockyLinux 9
-    Centos 7
+- Almalinux 8
+- Almalinux 9
+- RockyLinux 8
+- RockyLinux 9
+- Centos 7
 
 Tested on:
 
-    2.9 Ansible version
+- 2.9 Ansible version
 
 
 This script install proftpd with mariadb and manage virtual users
