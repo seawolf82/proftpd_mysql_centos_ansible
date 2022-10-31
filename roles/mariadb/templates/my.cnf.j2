@@ -72,13 +72,22 @@ expire_logs_days         = 2
 max_binlog_size          = 100M
 log_slave_updates
 
+#New parameters
+tmp_table_size           = 64M
+slow-query-log=1
+slow-query-log-file      = /var/lib/mysql/mysql-slow-query.log
+long-query-time=1
+max_heap_table_size      = 64M
+skip-name-resolve
+query_cache_size         = 64M
+wait_timeout             = 60
 
 default_storage_engine          = InnoDB
 
 innodb_autoinc_lock_mode        = 2 # This is the fastest and most scalable lock mode, but it is not safe when using statement-based replication or recovery scenarios when SQL statements are replayed from the binary log
 innodb_file_per_table
 innodb_thread_concurrency       = 0
-innodb_buffer_pool_size         = 128M
+innodb_buffer_pool_size         = 1G
 innodb_log_buffer_size          = 64M
 # innodb_locks_unsafe_for_binlog  = 1
 # innodb_flush_method             = O_DIRECT
